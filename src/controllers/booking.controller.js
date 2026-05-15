@@ -95,9 +95,11 @@ exports.acceptBooking = async (req, res) => {
     booking.status     = 'accepted';
     await booking.save();
     await User.findByIdAndUpdate(req.user.id, { isAvailable: false });
+
     const populated = await Booking.findById(booking._id)
       .populate('customer',   'name phone')
       .populate('technician', 'name phone serviceType');
+
     res.json({ message: 'Job accepted!', booking: populated });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -158,25 +160,11 @@ exports.getAcceptedJobs = async (req, res) => {
   try {
     const bookings = await Booking.find({
       technician: req.user.id,
-      status: 'accepted'
+      status:     'accepted'
     })
       .populate('customer', 'name phone')
       .sort({ createdAt: -1 });
     res.json(bookings);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// Complete job
-exports.completeJob = async (req, res) => {
-  try {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    booking.status = 'completed';
-    await booking.save();
-    await User.findByIdAndUpdate(booking.technician, { isAvailable: true });
-    res.json({ message: 'Job completed!' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

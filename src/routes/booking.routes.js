@@ -1,8 +1,15 @@
 const router = require('express').Router();
 const {
-  createBooking, acceptBooking, rejectBooking,
-  getMyBookings, getAcceptedJobs, updateLocation,
-  getPriceEstimate, completeJob, rateBooking, getHistory
+  createBooking,
+  acceptBooking,
+  rejectBooking,
+  getMyBookings,
+  getAcceptedJobs,
+  updateLocation,
+  getPriceEstimate,
+  completeJob,
+  rateBooking,
+  getHistory
 } = require('../controllers/booking.controller');
 const protect = require('../middlewares/auth.middleware');
 

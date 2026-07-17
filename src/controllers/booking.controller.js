@@ -37,7 +37,7 @@ exports.createBooking = async (req, res) => {
         if (!t.lat || !t.lng) return true;
         const dist = geolib.getDistance(
           { latitude: customerLat, longitude: customerLng },
-          { latitude: t.lat,       longitude: t.lng }
+          { latitude: t.lat, longitude: t.lng }
         );
         return dist <= 20000;
       });
@@ -170,12 +170,25 @@ exports.getAcceptedJobs = async (req, res) => {
   }
 };
 
+// Complete job
+exports.completeJob = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    booking.status = 'completed';
+    await booking.save();
+    await User.findByIdAndUpdate(booking.technician, { isAvailable: true });
+    res.json({ message: 'Job completed!' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // Rate booking
 exports.rateBooking = async (req, res) => {
   try {
     const { rating, review } = req.body;
     const booking = await Booking.findById(req.params.id);
-
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
     if (booking.status !== 'completed') return res.status(400).json({ message: 'Can only rate completed jobs' });
     if (booking.rating) return res.status(400).json({ message: 'Already rated' });
@@ -186,11 +199,9 @@ exports.rateBooking = async (req, res) => {
     booking.ratedAt = new Date();
     await booking.save();
 
-    // Update technician average rating
-    const tech     = await User.findById(booking.technician);
     const allRated = await Booking.find({
       technician: booking.technician,
-      rating:     { $ne: null }
+      rating: { $ne: null }
     });
     const avg = allRated.reduce((sum, b) => sum + b.rating, 0) / allRated.length;
     await User.findByIdAndUpdate(booking.technician, {
@@ -204,7 +215,7 @@ exports.rateBooking = async (req, res) => {
   }
 };
 
-// Get booking history
+// Get history
 exports.getHistory = async (req, res) => {
   try {
     let bookings;
